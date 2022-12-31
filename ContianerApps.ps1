@@ -1,5 +1,8 @@
-#
+#ContainerApps initiation and intial deployment script
 #Note this is POWERSHELL version 
+
+#interactive login via browser 
+Connect-AzAccount -UseDeviceAuthentication
 
 #Setup the Powershell Azure Shell environment 
 Connect-AzAccount
@@ -15,18 +18,10 @@ $Environment = "env-album-containerapps"
 $APIName="album-api"
 $FrontendName="album-ui"
 $GITHUB_USERNAME = "angusforeman"
-$ACRName = "acaalbums"+$GITHUB_USERNAME
-
-#Clone the code and move to the src folder
-git clone https://github.com/$GITHUB_USERNAME/containerapps-albumapi-csharp.git code-to-cloud
-cd code-to-cloud/src
+$ACRName = "acaalbumsv2"+$GITHUB_USERNAME
 
 #Create the Container Regsistry
 $acr = New-AzContainerRegistry -ResourceGroupName $ResourceGroup -Name $ACRName -Sku Basic -EnableAdminUser
-
-#Build the container 
-#NOTE that this image will be built in the src folder (via the . parameter)
-az acr build --registry $ACRName --image $APIName .
 
 #specify & create the required Log Analytics services needed by Container Apps 
 $WorkspaceArgs = @{
@@ -51,6 +46,19 @@ $EnvArgs = @{
 }
 
 New-AzContainerAppManagedEnv @EnvArgs
+
+#Clone the code and move to the src folder
+git clone https://github.com/$GITHUB_USERNAME/containerapps-albumapi-csharp.git code-to-cloud2
+cd code-to-cloud2/src
+# From here on to create an updated image deployment  ==============================================
+#  new Album(7, "Queenies fox songs", "Queenie and the foxettes", 19.99,  "https://aka.ms/albums-containerappslogo")
+git pull #- wil get updates if doing incremental
+
+
+#Build the container 
+#NOTE that this image will be built in the src folder (via the . parameter)
+az acr build --registry $ACRName --image $APIName .
+
 
 #Create a template object for the image 
 $ImageParams = @{
